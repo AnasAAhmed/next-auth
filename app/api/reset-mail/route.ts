@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Recipients and reset token are required' }, { status: 400 });
     }
     // const emailRecipients = emailsToSend.map((email: string) => ({ email }));
-    const resetUrl = `${process.env.DOMAIN_URL}/reset-password?token=${token}`
+    const resetUrl = `${process.env.DOMAIN_URL}/reset-password?token=${token}&email=${emailsToSend[0]}`
 
     const response = await client.testing.send({
       from: sender,

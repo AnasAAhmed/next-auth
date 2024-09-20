@@ -18,10 +18,10 @@ import { ForgetPassForm } from '@/components/Forget-passwordForm'
 
 
 
-export default async function ResetPassPage({ searchParams }: { searchParams: { token: string } }) {
+export default async function ResetPassPage({ searchParams }: { searchParams: { token: string,email:string} }) {
     const session = (await auth()) as Session
 
-    if (session) {
+    if (session||!searchParams.token) {
         redirect('/')
     }
 
@@ -33,7 +33,7 @@ export default async function ResetPassPage({ searchParams }: { searchParams: { 
                     <CardDescription>Reset password with token to continue.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ResetForm token={searchParams.token} />
+                    <ResetForm token={searchParams.token} email={searchParams.email} />
                 </CardContent>
             </Card>
             <div className="flex items-center gap-1 mt-4 text-sm text-zinc-400">

@@ -4,12 +4,12 @@ import { useFormState, useFormStatus } from 'react-dom'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { authenticate, resetPassword } from '@/lib/action'
+import { resetPassword } from '@/lib/action'
 import { Button } from './ui/button'
-import { Loader } from 'lucide-react'
+import { CheckCircleIcon, Loader } from 'lucide-react'
 import { Input } from './ui/input'
 
-export default function ResetForm({ token }: { token: string }) {
+export default function ResetForm({ token, email }: { token: string, email: string }) {
     const router = useRouter()
     const [result, dispatch] = useFormState(resetPassword, undefined)
 
@@ -29,22 +29,36 @@ export default function ResetForm({ token }: { token: string }) {
             action={dispatch}
         >
             <label
-                className="mb-3 mt-5 block text-xs font-medium text-zinc-400"
-                htmlFor="email"
+                className="mb-3 hidden mt-5 bldock text-xs font-medium text-zinc-400"
+                htmlFor="token"
             >
                 Token
             </label>
-            <div className="relative">
-                <Input
-                    className="peer block w-full rounded-md border bg-zinc-50 px-2 py-[9px] text-sm outline-none placeholder:text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950"
-                    id="token"
-                    type="text"
-                    name="token"
-                    placeholder="Enter token from url"
-                    required
-                    defaultValue={token}
-                />
-            </div>
+            <Input
+                className="peer  hidden w-full rounded-md border bg-zinc-50 px-2 py-[9px] text-sm outline-none placeholder:text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950"
+                id="token"
+                type="text"
+                name="token"
+                placeholder="Enter token from url"
+                required
+                defaultValue={token}
+            />
+            <label
+                className="mb-3 mt-5 block text-xs font-medium text-zinc-400"
+                htmlFor="email"
+            >
+                Requested Email
+            </label>
+            <Input
+                className="peer block w-full rounded-md border bg-zinc-50 px-2 py-[9px] text-sm outline-none placeholder:text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950"
+                id="email"
+                type="email"
+                name="email"
+                disabled
+                placeholder="Enter email from url"
+                required
+                defaultValue={email}
+            />
             <label
                 className="block text-xs font-medium my-3 text-zinc-400"
                 htmlFor="password"
@@ -76,6 +90,12 @@ export default function ResetForm({ token }: { token: string }) {
                 minLength={6}
             />
             <ResetBtn />
+            {result && result.type === 'succes' && <div className="bg-green-200 flex px-3 gap-3 items-center mt-4 py-3 w-full rounded-md">
+                <CheckCircleIcon />
+                <p className="text-primary">
+                    Password Reset successful you can close this tab.
+                </p>
+            </div>}
         </form>
     )
 }

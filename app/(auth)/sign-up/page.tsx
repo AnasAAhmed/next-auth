@@ -37,15 +37,13 @@ export default async function LoginPage() {
           <CardDescription>Sign up with new account to continue.</CardDescription>
         </CardHeader>
         <CardContent>
-          <SignupForm />
-          <div className="text-md text-zinc-400 flex justify-center my-1">OR</div>
           <form
             action={async () => {
               "use server"
               await signIn('google')
             }}
           >
-            <Button className='w-full flex items-center gap-4 my-2' variant={'outline'}>
+            <Button className='w-full flex items-center gap-4 mt-4 mb-2' variant={'outline'}>
               <img loading="lazy" height="24" width="24" id="provider-logo" src="https://authjs.dev/img/providers/google.svg" />
               Sign up with Google
             </Button>
@@ -61,6 +59,8 @@ export default async function LoginPage() {
               Sign up with Github
             </Button>
           </form>
+          <div className="text-md text-zinc-400 flex justify-center">or</div>
+          <SignupForm />
         </CardContent>
       </Card>
       <Link

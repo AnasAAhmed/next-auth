@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { resetPassRequest } from "@/lib/action"
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons"
 import { Loader } from "lucide-react"
 import { useEffect } from "react"
 import { useFormState, useFormStatus } from "react-dom"
 import { toast } from "sonner"
 
-export function ForgetPassForm({btnText}:{btnText:string}) {
+export function ForgetPassForm({ btnText }: { btnText: string }) {
     const [result, dispatch] = useFormState(resetPassRequest, undefined)
 
     useEffect(() => {
@@ -37,6 +38,9 @@ export function ForgetPassForm({btnText}:{btnText:string}) {
                     <DialogTitle>Forget password?</DialogTitle>
                     <DialogDescription>
                         We will send you the email for password reset.
+                        <div className="bg-yellow-200 flex px-3 gap-3 items-center mt-4 h-8 w-full rounded-md">
+                            <ExclamationTriangleIcon /><p className="text-primary">This feature is disabled in production.</p>
+                        </div>
                     </DialogDescription>
                 </DialogHeader>
                 <form
@@ -49,6 +53,8 @@ export function ForgetPassForm({btnText}:{btnText:string}) {
                         id="email"
                         name="email"
                         type="email"
+                        required
+                        disabled={process.env.NODE_ENV === 'production'}
                         placeholder="Enter your email address"
                         className="col-span-3 focus:outline-none"
                     />
@@ -64,7 +70,8 @@ function ReqBtn() {
     return (
         <Button
             className="w-full mt-4"
-            aria-disabled={pending}
+            aria-disabled={pending || process.env.NODE_ENV === 'production'}
+            // disabled
             type="submit"
         >
             {pending ? <Loader className='animate-spin' /> : 'Send email request'}

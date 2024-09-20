@@ -31,7 +31,7 @@ export default function LoginForm() {
     // className="flex flex-col items-center gap-4 space-y-3"
     >
       <label
-        className="mb-3 mt-5 block text-xs font-medium text-zinc-400"
+        className="mb-3 block text-xs font-medium text-zinc-400"
         htmlFor="email"
       >
         Email
@@ -76,7 +76,7 @@ function LoginButton() {
     <Button
       className="w-full mt-4"
       aria-disabled={pending}
-      variant={'outline'}
+      variant={'default'}
     >
       {pending ? <Loader className='animate-spin' /> : 'Log in'}
     </Button>
