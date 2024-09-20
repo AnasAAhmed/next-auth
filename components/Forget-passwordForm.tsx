@@ -70,8 +70,7 @@ function ReqBtn() {
     return (
         <Button
             className="w-full mt-4"
-            aria-disabled={pending || process.env.NODE_ENV === 'production'}
-            // disabled
+            disabled={pending || process.env.NODE_ENV === 'production'}
             type="submit"
         >
             {pending ? <Loader className='animate-spin' /> : 'Send email request'}
