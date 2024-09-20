@@ -6,6 +6,7 @@ import { AuthError } from "next-auth";
 import { z } from "zod";
 import { hash, genSalt } from "bcryptjs";
 import { User } from "./types";
+import { timeStamp } from "console";
 
 export const sql = neon(process.env.DATABASE_URL!);
 
@@ -208,12 +209,12 @@ export async function resetPassRequest(
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ emailsToSend: [parsedCredentials.data.email], token }),
+                    body: JSON.stringify({ emailsToSend: [parsedCredentials.data.email], userId: user.id, token }),
                 });
 
                 if (res.ok) {
                     return {
-                        type: 'success',
+                        type: 'succes',
                         resultCode: 'Reset password email sent.'
                     };
                 } else {
@@ -251,17 +252,20 @@ export async function resetPassword(
 ): Promise<Result | undefined> {
     try {
         const token = formData.get('token');
+        const userId = formData.get('userId');
         const newPassword = formData.get('password');
         const ConfirmPassword = formData.get('cpassword');
 
         const parsedCredentials = z
             .object({
                 token: z.string().uuid(),
-                password: z.string().min(8, "Password must be at least 8 characters long"),
-                ConfirmPassword: z.string().min(8, "ConfirmPassword must be at least 8 characters long"),
+                userId: z.string().min(30, "Invalid userId"),
+                password: z.string().min(6, "Password must be at least 8 characters long"),
+                ConfirmPassword: z.string().min(6, "ConfirmPassword must be at least 8 characters long"),
             })
             .safeParse({
                 token,
+                userId,
                 password: newPassword,
                 ConfirmPassword
             });
@@ -275,29 +279,28 @@ export async function resetPassword(
         if (!parsedCredentials.success) {
             return {
                 type: 'error',
-                resultCode: parsedCredentials.error.message,
+                resultCode: parsedCredentials.error.message as string,
             };
         }
 
-        const currentTime = Math.floor(Date.now() / 1000);
         const [user] = await sql`
-            SELECT id, reset_token_expires
+            SELECT id, reset_token, reset_token_expires
             FROM users 
-            WHERE reset_token = ${parsedCredentials.data.token}
-            AND reset_token_expires > to_timestamp(${currentTime})
+            WHERE id = ${parsedCredentials.data.userId}
         `;
 
-        if (!user) {
+        const isValidToken = user.reset_token === parsedCredentials.data.token;
+        const isExpiredToken = user.reset_token_expires > Math.floor(Date.now() / 1000)
+
+        if (!isValidToken || !isExpiredToken) {
             return {
                 type: 'error',
                 resultCode: 'Invalid or expired token',
             };
         }
 
-        // Hash the new password
         const hashedPassword = await hash(parsedCredentials.data.password, 10);
 
-        // Update the user's password and clear the reset token
         await sql`
             UPDATE users
             SET password = ${hashedPassword},
@@ -307,7 +310,7 @@ export async function resetPassword(
         `;
 
         return {
-            type: 'success',
+            type: 'succes',
             resultCode: 'Password successfully reset',
         };
     } catch (error) {

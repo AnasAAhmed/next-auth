@@ -24,13 +24,13 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { emailsToSend, token } = body;
+    const { emailsToSend,userId, token } = body;
 
     if (!recipients || !token) {
       return NextResponse.json({ error: 'Recipients and reset token are required' }, { status: 400 });
     }
     // const emailRecipients = emailsToSend.map((email: string) => ({ email }));
-    const resetUrl = `${process.env.DOMAIN_URL}/reset-password?token=${token}&email=${emailsToSend[0]}`
+    const resetUrl = `${process.env.DOMAIN_URL}/reset-password?token=${token}&id=${userId}`
 
     const response = await client.testing.send({
       from: sender,

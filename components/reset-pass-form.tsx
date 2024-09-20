@@ -9,7 +9,7 @@ import { Button } from './ui/button'
 import { CheckCircleIcon, Loader } from 'lucide-react'
 import { Input } from './ui/input'
 
-export default function ResetForm({ token, email }: { token: string, email: string }) {
+export default function ResetForm({ token, userId }: { token: string, userId: string }) {
     const router = useRouter()
     const [result, dispatch] = useFormState(resetPassword, undefined)
 
@@ -28,14 +28,8 @@ export default function ResetForm({ token, email }: { token: string, email: stri
         <form
             action={dispatch}
         >
-            <label
-                className="mb-3 hidden mt-5 bldock text-xs font-medium text-zinc-400"
-                htmlFor="token"
-            >
-                Token
-            </label>
             <Input
-                className="peer  hidden w-full rounded-md border bg-zinc-50 px-2 py-[9px] text-sm outline-none placeholder:text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950"
+                className="peer hidden w-full rounded-md border bg-zinc-50 px-2 py-[9px] text-sm outline-none placeholder:text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950"
                 id="token"
                 type="text"
                 name="token"
@@ -43,21 +37,14 @@ export default function ResetForm({ token, email }: { token: string, email: stri
                 required
                 defaultValue={token}
             />
-            <label
-                className="mb-3 mt-5 block text-xs font-medium text-zinc-400"
-                htmlFor="email"
-            >
-                Requested Email
-            </label>
             <Input
-                className="peer block w-full rounded-md border bg-zinc-50 px-2 py-[9px] text-sm outline-none placeholder:text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950"
-                id="email"
-                type="email"
-                name="email"
-                disabled
-                placeholder="Enter email from url"
+                className="peer hidden w-full rounded-md border bg-zinc-50 px-2 py-[9px] text-sm outline-none placeholder:text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950"
+                id="userId"
+                type="text"
+                name="userId"
+                placeholder="Enter userId from url"
                 required
-                defaultValue={email}
+                defaultValue={userId}
             />
             <label
                 className="block text-xs font-medium my-3 text-zinc-400"
@@ -90,7 +77,7 @@ export default function ResetForm({ token, email }: { token: string, email: stri
                 minLength={6}
             />
             <ResetBtn />
-            {result && result.type === 'succes' && <div className="bg-green-200 flex px-3 gap-3 items-center mt-4 py-3 w-full rounded-md">
+            {result && result.type !== 'error' && <div className="bg-green-200 flex px-3 gap-3 items-center mt-4 py-3 w-full rounded-md">
                 <CheckCircleIcon />
                 <p className="text-primary">
                     Password Reset successful you can close this tab.
