@@ -9,7 +9,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { resetPassRequest } from "@/lib/action"
+import { resetPassRequest } from "@/lib/auth.action"
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons"
 import { Loader } from "lucide-react"
 import { useEffect } from "react"

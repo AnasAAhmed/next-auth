@@ -43,8 +43,8 @@ export default async function LoginPage() {
               await signIn('google')
             }}
           >
-            <Button className='w-full flex items-center gap-4 mt-4 mb-2' variant={'outline'}>
-              <img loading="lazy" height="24" width="24" id="provider-logo" src="https://authjs.dev/img/providers/google.svg" />
+            <Button title=' Sign up with Google' className='w-full flex items-center gap-4 mt-4 mb-2' variant={'outline'}>
+              <img loading="lazy" height="24" width="24" id="google-logo" src="https://authjs.dev/img/providers/google.svg" />
               Sign up with Google
             </Button>
           </form>
@@ -54,8 +54,8 @@ export default async function LoginPage() {
               await signIn('github')
             }}
           >
-            <Button className='w-full flex items-center gap-4 my-2' variant={'outline'}>
-              <img loading="lazy" height="24" width="24" id="provider-logo" src="https://authjs.dev/img/providers/github.svg" />
+            <Button title=' Sign up with Github' className='w-full flex items-center gap-4 my-2' variant={'outline'}>
+              <img loading="lazy" height="24" width="24" id="Github-logo" src="https://authjs.dev/img/providers/github.svg" />
               Sign up with Github
             </Button>
           </form>

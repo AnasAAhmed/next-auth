@@ -4,10 +4,10 @@ import { useFormState, useFormStatus } from 'react-dom'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { resetPassword } from '@/lib/action'
 import { Button } from './ui/button'
 import { CheckCircleIcon, Loader } from 'lucide-react'
 import { Input } from './ui/input'
+import { resetPassword } from '@/lib/auth.action'
 
 export default function ResetForm({ token, userId }: { token: string, userId: string }) {
     const router = useRouter()

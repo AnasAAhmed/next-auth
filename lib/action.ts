@@ -1,323 +1,122 @@
 "use server";
 import { neon } from "@neondatabase/serverless";
-import { extractNameFromEmail, ResultCode } from "./utils";
-import { signIn } from "@/auth";
-import { AuthError } from "next-auth";
-import { z } from "zod";
-import { hash, genSalt } from "bcryptjs";
+import { extractNameFromEmail } from "./utils";
 import { User } from "./types";
-import { timeStamp } from "console";
 
 export const sql = neon(process.env.DATABASE_URL!);
 
 
-
-export async function getUser(email: string) {
+export async function getUser({
+    email,
+    provider,
+    ip,
+    userAgent,
+    country,
+    city,
+    browser,
+    device,
+    os,
+    isSigningUpUserWithCredientials = false,
+}: {
+    email: string
+    provider: 'google' | 'github' | 'credentials' | 'none'
+    ip: string
+    userAgent: string
+    country: string
+    city: string
+    browser: string
+    device: string
+    os: string
+    isSigningUpUserWithCredientials?: boolean
+}) {
     try {
         const [user] = await sql`SELECT * FROM users WHERE email = ${email}`;
+
+        if (!user) {
+            return null;
+        }
+
+        const providerMatches =
+            (provider === 'google' && user.googleid) ||
+            (provider === 'github' && user.githubid) ||
+            (provider === 'credentials' && user.password);
+
+
+        if (isSigningUpUserWithCredientials) {
+            if (providerMatches) {
+                return user as User;
+            }
+            throw new Error('A user with this email already exists with another sign-in method');
+        }
+
+        if (!providerMatches) {
+            throw new Error('Email already exists with a different sign-in method');
+        }
+
+        await sql`
+          INSERT INTO user_signin_history (
+            userid, country, city, ip, user_agent, os, browser, device, signed_in_at
+          ) VALUES (
+            ${user.id}, ${country}, ${city}, ${ip}, ${userAgent}, ${os}, ${browser}, ${device}, ${new Date()}
+          )
+      `;
+
         return user as User;
     } catch (error) {
-        const err = error as Error
-        throw new Error('Internal Server Error' + err.message)
+        const err = error as Error;
+        throw new Error(err.message);
     }
 }
 
-interface Result {
-    type: string
-    resultCode: string
-}
 
-export async function authenticate(
-    _prevState: Result | undefined,
-    formData: FormData
-): Promise<Result | undefined> {
-    try {
-        const email = formData.get('email')
-        const password = formData.get('password')
-
-        const parsedCredentials = z
-            .object({
-                email: z.string().email(),
-                password: z.string().min(6)
-            })
-            .safeParse({
-                email,
-                password
-            })
-
-        if (parsedCredentials.error) {
-            return {
-                type: 'error',
-                resultCode: parsedCredentials.error.cause as string
-            }
-        }
-        await signIn('credentials', {
-            email,
-            password,
-            redirect: false
-        })
-
-        return {
-            type: 'success',
-            resultCode: ResultCode.UserLoggedIn
-        }
-
-    } catch (error) {
-        if (error instanceof AuthError) {
-            switch (error.type) {
-                case 'CredentialsSignin':
-                    return {
-                        type: 'error',
-                        resultCode: ResultCode.InvalidCredentials
-                    }
-                default:
-                    return {
-                        type: 'error',
-                        resultCode: ResultCode.UnknownError
-                    }
-            }
-        }
-    }
-}
-
-export async function createUser(
+export async function createUser({ email,
+    ip,
+    username,
+    hashedPassword,
+    userAgent,
+    country,
+    city,
+    browser,
+    device,
+    os,
+    isSigningUpUserWithCredientials = false
+}: {
     email: string,
     hashedPassword: string,
-) {
-    const existingUser = await getUser(email)
-
-    if (existingUser) {
-        return {
-            type: 'error',
-            resultCode: ResultCode.UserAlreadyExists
-        }
-    } else {
-        const name = extractNameFromEmail(email)
-        await sql`
-        INSERT INTO users (id, name, email, password)
-        VALUES (${crypto.randomUUID()}, ${name}, ${email}, ${hashedPassword})
-      `;
-        return {
-            type: 'success',
-            resultCode: ResultCode.UserCreated
-        }
-    }
-}
-
-
-export async function signup(
-    _prevState: Result | undefined,
-    formData: FormData
-): Promise<Result | undefined> {
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-
-    const parsedCredentials = z
-        .object({
-            email: z.string().email(),
-            password: z.string().min(6)
-        })
-        .safeParse({
-            email,
-            password
-        });
-
-    if (parsedCredentials.success) {
-        const salt = await genSalt(10);
-
-        const hashedPassword = await hash(password, salt);
-
-        try {
-            const result = await createUser(email, hashedPassword);
-
-            if (result.resultCode === ResultCode.UserCreated) {
-                await signIn('credentials', {
-                    email,
-                    password,
-                    redirect: false
-                });
-            }
-
-            return result;
-        } catch (error) {
-            console.error("Error in signup process:", error); // Log detailed error to the console
-
-            if (error instanceof AuthError) {
-                switch (error.type) {
-                    case 'CredentialsSignin':
-                        return {
-                            type: 'error',
-                            resultCode: ResultCode.InvalidCredentials
-                        };
-                    default:
-                        return {
-                            type: 'error',
-                            resultCode: error.message
-                        };
-                }
-            } else {
-                const typeErr = error as Error
-                return {
-                    type: 'error',
-                    resultCode: typeErr.message as string,
-                };
-            }
-        }
-    } else {
-        return {
-            type: 'error',
-            resultCode: ResultCode.InvalidSubmission,
-        };
-    }
-}
-export async function resetPassRequest(
-    _prevState: Result | undefined,
-    formData: FormData
-): Promise<Result | undefined> {
+    username: string,
+    ip: string,
+    userAgent: string,
+    country: string,
+    city: string,
+    browser: string,
+    device: string,
+    os: string,
+    isSigningUpUserWithCredientials?: boolean
+}) {
     try {
-        const email = formData.get('email');
+        const existingUser = await getUser({ email, provider: 'credentials', browser, city, country, ip, userAgent, os, device, isSigningUpUserWithCredientials });
 
-        const parsedCredentials = z
-            .object({
-                email: z.string().email(),
-            })
-            .safeParse({
-                email,
-            });
-
-        if (!parsedCredentials.success) {
-            return {
-                type: 'error',
-                resultCode: parsedCredentials.error.message as string
-            }
-        }
-
-        const token = crypto.randomUUID();
-        const tokenExpirationTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now, in seconds
-
-        try {
+        if (existingUser) {
+            return null;
+        } else {
+            const name = username || extractNameFromEmail(email)
             const [user] = await sql`
-                UPDATE users 
-                SET reset_token = ${token}, reset_token_expires = to_timestamp(${tokenExpirationTime})
-                WHERE email = ${parsedCredentials.data.email}
-                RETURNING id
-            `;
-
-            if (user) {
-                const res = await fetch(`${process.env.DOMAIN_URL}/api/reset-mail`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ emailsToSend: [parsedCredentials.data.email], userId: user.id, token }),
-                });
-
-                if (res.ok) {
-                    return {
-                        type: 'succes',
-                        resultCode: 'Reset password email sent.'
-                    };
-                } else {
-                    return {
-                        type: 'error',
-                        resultCode: 'Error sending mail'
-                    };
-                }
-            } else {
-                return {
-                    type: 'error',
-                    resultCode: 'Invalid Email'
-                };
-            }
-        } catch (error) {
-            const typeErr = error as Error;
-            return {
-                type: 'error',
-                resultCode: typeErr.message
-            };
+            INSERT INTO users (id, name, email, image, password, country, city)
+            VALUES (${crypto.randomUUID()}, ${name}, ${email}, ${'https://ui-avatars.com/api/?name=' + name}, ${hashedPassword}, ${country}, ${city})
+            RETURNING id, name, image, email`;
+            await sql`
+             INSERT INTO user_signin_history (
+            userid, country, city, ip, user_agent, os, browser, device, signed_in_at
+          ) VALUES (
+            ${user.id}, ${country}, ${city}, ${ip}, ${userAgent}, ${os}, ${browser}, ${device}, ${new Date()}
+          )
+          `
+            return user as User;
         }
-
     } catch (error) {
-        return {
-            type: 'error',
-            resultCode: 'Unknown Error'
-        };
+        console.log('creating User: ' + (error as Error).message);
+        throw new Error('creating User: ' + (error as Error).message);
     }
 }
 
 
-export async function resetPassword(
-    _prevState: Result | undefined,
-    formData: FormData
-): Promise<Result | undefined> {
-    try {
-        const token = formData.get('token');
-        const userId = formData.get('userId');
-        const newPassword = formData.get('password');
-        const ConfirmPassword = formData.get('cpassword');
-
-        const parsedCredentials = z
-            .object({
-                token: z.string().uuid(),
-                userId: z.string().min(30, "Invalid userId"),
-                password: z.string().min(6, "Password must be at least 8 characters long"),
-                ConfirmPassword: z.string().min(6, "ConfirmPassword must be at least 8 characters long"),
-            })
-            .safeParse({
-                token,
-                userId,
-                password: newPassword,
-                ConfirmPassword
-            });
-
-        if (parsedCredentials.data?.ConfirmPassword !== parsedCredentials.data?.password) {
-            return {
-                type: 'error',
-                resultCode: 'Password do not match',
-            };
-        }
-        if (!parsedCredentials.success) {
-            return {
-                type: 'error',
-                resultCode: parsedCredentials.error.message as string,
-            };
-        }
-
-        const [user] = await sql`
-            SELECT id, reset_token, reset_token_expires
-            FROM users 
-            WHERE id = ${parsedCredentials.data.userId}
-        `;
-
-        const isValidToken = user.reset_token === parsedCredentials.data.token;
-        const isExpiredToken = user.reset_token_expires > Math.floor(Date.now() / 1000)
-
-        if (!isValidToken || !isExpiredToken) {
-            return {
-                type: 'error',
-                resultCode: 'Invalid or expired token',
-            };
-        }
-
-        const hashedPassword = await hash(parsedCredentials.data.password, 10);
-
-        await sql`
-            UPDATE users
-            SET password = ${hashedPassword},
-                reset_token = NULL,
-                reset_token_expires = NULL
-            WHERE id = ${user.id}
-        `;
-
-        return {
-            type: 'succes',
-            resultCode: 'Password successfully reset',
-        };
-    } catch (error) {
-        const typeErr = error as Error;
-        return {
-            type: 'error',
-            resultCode: typeErr.message,
-        };
-    }
-}

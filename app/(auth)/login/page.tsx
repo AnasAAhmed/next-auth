@@ -9,12 +9,11 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import Link from 'next/link'
+import { ForgetPassForm } from '@/components/Forget-passwordForm'
 
 
 
@@ -45,7 +44,7 @@ export default async function LoginPage() {
               await signIn('google')
             }}
           >
-            <Button className='w-full flex items-center gap-4 mt-4 mb-2' variant={'outline'}>
+            <Button title='Login up with google' className='w-full flex items-center gap-4 mt-4 mb-2' variant={'outline'}>
               <img loading="lazy" height="24" width="24" id="provider-logo" src="https://authjs.dev/img/providers/google.svg" />
               Log in with Google
             </Button>
@@ -56,13 +55,15 @@ export default async function LoginPage() {
               await signIn('github')
             }}
           >
-            <Button className='w-full flex items-center gap-4 my-2' variant={'outline'}>
+            <Button title=' Login up with Github' className='w-full flex items-center gap-4 my-2' variant={'outline'}>
               <img loading="lazy" height="24" width="24" id="provider-logo" src="https://authjs.dev/img/providers/github.svg" />
               Log in with Github
             </Button>
           </form>
           <div className="text-md text-zinc-400 flex justify-center">or</div>
           <LoginForm />
+          <ForgetPassForm btnText='Forget Password?'/>
+
         </CardContent>
       </Card>
       <Link

@@ -12,7 +12,7 @@ const client = new MailtrapClient({
 
 const sender = {
   email: "mailtrap@example.com",
-  name: "Mailtrap Test",
+  name: "next-auth",
 };
 
 const recipients = [
