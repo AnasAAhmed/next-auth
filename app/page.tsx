@@ -25,7 +25,7 @@ const Page = async ({ searchParams }: { searchParams: { page: string } }) => {
             const rows = await sql`
       SELECT * FROM user_signin_history
       WHERE userid = ${session.user.id}
-      ORDER BY signed_in_at DESC
+      ORDER BY signed_in_at ASC
       LIMIT ${LIMIT}
       OFFSET ${skip}
     `;
