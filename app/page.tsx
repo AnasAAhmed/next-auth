@@ -51,20 +51,26 @@ const Page = async ({ searchParams }: { searchParams: { page: string } }) => {
     return (
         <div className="max-w-3xl mx-auto px-4 py-10 space-y-8">
             {/* Profile Card */}
-            <div className="bg-white border border-zinc-200 rounded-xl shadow-sm p-6 flex items-center gap-4">
+            <div className="bg-white flex-wrap border border-zinc-200 rounded-xl shadow-sm p-6 flex items-center gap-4">
                 <img
-                    src={user?.image || `https://ui-avatars.com/api/?name=${user?.name}&w=16&q=75`}
+                    src={
+                        user?.image ||
+                        `https://ui-avatars.com/api/?name=${user?.name}&w=16&q=75`
+                    }
                     alt="avatar"
-                    //   width={100}
-                    //   height={100}
                     className="w-16 h-16 rounded-full border border-zinc-200 object-cover"
                 />
                 <div className="flex-1">
-                    <h2 className="text-lg font-semibold">{user?.name}</h2>
-                    <p className="text-sm text-zinc-500">{user?.email}</p>
-                    <p className="text-sm text-zinc-400 mt-1">Session expires: {new Date(session.expires).toLocaleString()}</p>
+                    <h2 className="text-lg font-semibold truncate">{user?.name}</h2>
+                    <p className="text-sm text-zinc-500 truncate">{user?.email}</p>
+                    <p className="text-sm text-zinc-400 mt-1 max-w-72 break-words">
+                        Session expires: {new Date(session.expires).toLocaleString()}
+                    </p>
                 </div>
-                <form action={async () => { 'use server'; await signOut() }}>
+                <form action={async () => {
+                    'use server';
+                    await signOut();
+                }}>
                     <button className="text-sm px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition">
                         Sign Out
                     </button>
@@ -77,29 +83,83 @@ const Page = async ({ searchParams }: { searchParams: { page: string } }) => {
                     <h3 className="text-base font-medium">Recent Sign-in History</h3>
                 </div>
                 <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm">
+                    <table className="min-w-full text-sm lg:table-auto block lg:hidden">
+                        <thead className="bg-zinc-50 border-b border-zinc-200">
+                            <tr>
+                                <th className="text-left px-4 py-2 font-medium text-zinc-600">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {userSignInHistory.length > 0 ? (
+                                userSignInHistory.map((entry,i) => (
+                                    <tr key={i} className="hover:bg-zinc-50 border-b-[2px]">
+                                        <td className="px-4 py-2">
+                                            <p>
+                                                <span className="font-semibold">Date:</span>{' '}
+                                                {new Date(entry.signed_in_at).toLocaleString()}
+                                            </p>
+                                            <p>
+                                                <span className="font-semibold">IP:</span> {entry.ip}
+                                            </p>
+                                            <p>
+                                                <span className="font-semibold">Location:</span>{' '}
+                                                {entry.country + ', ' + entry.city || 'Unknown'}
+                                            </p>
+                                            <p>
+                                                <span className="font-semibold">Device:</span>{' '}
+                                                <span title={entry.user_agent} className="break-words">
+                                                    {entry.user_agent}
+                                                </span>
+                                            </p>
+                                            <p>
+                                                <span className="font-semibold">OS:</span>{' '}
+                                                <span className="truncate max-w-[200px]">{entry.os}</span>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td className="px-4 py-4 text-zinc-500 text-center">
+                                        No sign-in history found.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                    <table className="min-w-full text-sm hidden lg:table">
                         <thead className="bg-zinc-50 border-b border-zinc-200">
                             <tr>
                                 <th className="text-left px-4 py-2 font-medium text-zinc-600">Date</th>
                                 <th className="text-left px-4 py-2 font-medium text-zinc-600">IP</th>
-                                <th className="text-left px-4 py-2 font-medium text-zinc-600 hidden md:table-cell">Location</th>
-                                <th className="text-left px-4 py-2 font-medium text-zinc-600 hidden md:table-cell">Device</th>
-                                {/* <th className="text-left px-4 py-2 font-medium text-zinc-600 hidden md:table-cell">Device</th> */}
-                                <th className="text-left px-4 py-2 font-medium text-zinc-600 hidden md:table-cell">OS</th>
+                                <th className="text-left px-4 py-2 font-medium text-zinc-600">Location</th>
+                                <th className="text-left px-4 py-2 font-medium text-zinc-600">Device</th>
+                                <th className="text-left px-4 py-2 font-medium text-zinc-600">OS</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {userSignInHistory.length > 0 ? userSignInHistory.map(entry => (
-                                <tr key={entry.userid} className="hover:bg-zinc-50">
-                                    <td className="px-4 py-2">{new Date(entry.signed_in_at).toLocaleString()}</td>
-                                    <td className="px-4 py-2">{entry.ip}</td>
-                                    <td className="px-4 py-2 hidden md:table-cell">{entry.country + ', ' + entry.city || 'Unknown'}</td>
-                                    <td title={entry.user_agent} className="px-4 py-2 hidden md:table-cell truncate max-w-[200px]">{entry.user_agent}</td>
-                                    <td className="px-4 py-2 hidden md:table-cell truncate max-w-[200px]">{entry.os}</td>
-                                </tr>
-                            )) : (
+                            {userSignInHistory.length > 0 ? (
+                                userSignInHistory.map((entry,i) => (
+                                    <tr key={i} className="hover:bg-zinc-50">
+                                        <td className="px-4 py-2">
+                                            {new Date(entry.signed_in_at).toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-2">{entry.ip}</td>
+                                        <td className="px-4 py-2">
+                                            {entry.country + ', ' + entry.city || 'Unknown'}
+                                        </td>
+                                        <td
+                                            title={entry.user_agent}
+                                            className="px-4 pt-2 cursor-pointer break-swords line-clamp-2 max-w-[200px]"
+                                        >
+                                            {entry.user_agent}
+                                        </td>
+                                        <td className="px-4 py-2 truncate max-w-[200px]">{entry.os}</td>
+                                    </tr>
+                                ))
+                            ) : (
                                 <tr>
-                                    <td className="px-4 py-4 text-zinc-500 text-center" colSpan={4}>
+                                    <td className="px-4 py-4 text-zinc-500 text-center" colSpan={5}>
                                         No sign-in history found.
                                     </td>
                                 </tr>
@@ -108,7 +168,10 @@ const Page = async ({ searchParams }: { searchParams: { page: string } }) => {
                     </table>
                 </div>
             </div>
-            <PaginationControls currentPage={Number(searchParams.page) || 1} totalPages={totalPages} />
+            <PaginationControls
+                currentPage={Number(searchParams.page) || 1}
+                totalPages={totalPages}
+            />
         </div>
     )
 }

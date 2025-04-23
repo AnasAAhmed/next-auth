@@ -5,7 +5,7 @@ import React, { Suspense } from 'react'
 
 const Error = () => {
     return (
-        <Suspense fallback={<div className='min-h-[90vh] flex justify-center items-center'><Loader size={'5rem'}/></div>}>
+        <Suspense fallback={<div className='min-h-[90vh] flex justify-center items-center'><Loader className='animate-spin' size={'5rem'}/></div>}>
             <AuthError />
         </Suspense>
     )

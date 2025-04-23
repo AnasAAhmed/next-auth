@@ -3,7 +3,7 @@ import React from 'react'
 
 const loading = () => {
   return (
-    <div className='min-h-[90vh] flex justify-center items-center'><Loader size={'5rem'}/></div>
+    <div className='min-h-[90vh] flex justify-center items-center'><Loader className='animate-spin' size={'5rem'}/></div>
   )
 }
 
